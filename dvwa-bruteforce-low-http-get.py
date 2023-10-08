@@ -17,7 +17,7 @@ sec_level = 'low'
 dvwa_user = 'admin'
 dvwa_pass = 'password'
 user_list = 'unix_users.txt'
-pass_list = 'unix_users.txt'
+pass_list = 'unix_passwords.txt'
 
 
 # Value to look for in response header (Whitelisting)
